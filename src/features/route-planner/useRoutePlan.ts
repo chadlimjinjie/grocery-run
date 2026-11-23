@@ -93,7 +93,11 @@ export function useRoutePlan(layout: StoreLayout | null, items: ShoppingListItem
       }
     }
 
-    const stops = order.map((idx) => ({ label: resolved[idx].label, position: resolved[idx].marker.position }))
+    const stops = order.map((idx) => ({
+      label: resolved[idx].label,
+      position: resolved[idx].marker.position,
+      items: resolved[idx].items,
+    }))
 
     const path = [
       ...(reconstructPath(startSearch, resolved[order[0]].marker.position) ?? []),

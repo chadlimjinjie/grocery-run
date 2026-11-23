@@ -15,6 +15,7 @@ export interface ShoppingList {
 export interface RouteStop {
   label: string
   position: GridPosition
+  items: ShoppingListItem[]
 }
 
 export interface RoutePlan {

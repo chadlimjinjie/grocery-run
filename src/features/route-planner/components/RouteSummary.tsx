@@ -32,6 +32,11 @@ export function RouteSummary({ plan }: RouteSummaryProps) {
               <li key={`${stop.label}-${i}`}>
                 {i + 1}. {stop.label}
                 <span className="ml-1 text-muted-foreground">(+{plan.legDistances[i]})</span>
+                <ul className="ml-4 list-disc text-muted-foreground">
+                  {stop.items.map((item) => (
+                    <li key={item.id}>{item.name.trim() || '(unnamed item)'}</li>
+                  ))}
+                </ul>
               </li>
             ))}
             <li className="text-muted-foreground">

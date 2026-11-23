@@ -5,6 +5,7 @@ import type { ShoppingListItem } from './types'
 export interface ResolvedStop {
   label: string
   marker: CategoryMarker
+  items: ShoppingListItem[]
 }
 
 export interface ResolutionResult {
@@ -31,25 +32,27 @@ export function resolveCategories(
     markersByLabel.set(key, list)
   }
 
-  const neededLabels = new Map<string, string>()
+  const neededLabels = new Map<string, { displayLabel: string; items: ShoppingListItem[] }>()
   for (const item of items) {
     const key = normalize(item.category)
     if (!key) continue
-    if (!neededLabels.has(key)) neededLabels.set(key, item.category.trim())
+    const existing = neededLabels.get(key)
+    if (existing) existing.items.push(item)
+    else neededLabels.set(key, { displayLabel: item.category.trim(), items: [item] })
   }
 
   const resolved: ResolvedStop[] = []
   const unresolved: string[] = []
   let startSearch: ReturnType<typeof bfsFrom> | null = null
 
-  for (const [key, displayLabel] of neededLabels) {
+  for (const [key, { displayLabel, items: groupItems }] of neededLabels) {
     const candidates = markersByLabel.get(key)
     if (!candidates || candidates.length === 0) {
       unresolved.push(displayLabel)
       continue
     }
     if (candidates.length === 1) {
-      resolved.push({ label: displayLabel, marker: candidates[0] })
+      resolved.push({ label: displayLabel, marker: candidates[0], items: groupItems })
       continue
     }
     if (!startSearch) startSearch = bfsFrom(layout, startPosition)
@@ -62,7 +65,7 @@ export function resolveCategories(
         nearest = candidate
       }
     }
-    resolved.push({ label: displayLabel, marker: nearest })
+    resolved.push({ label: displayLabel, marker: nearest, items: groupItems })
   }
 
   return { resolved, unresolved }
