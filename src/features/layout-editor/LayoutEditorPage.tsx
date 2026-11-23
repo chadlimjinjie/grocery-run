@@ -1,17 +1,27 @@
 import { useState } from 'react'
+import { CategoryMarkerDialog } from './components/CategoryMarkerDialog'
 import { DiscardLayoutDialog } from './components/DiscardLayoutDialog'
 import { LayoutCanvas } from './components/LayoutCanvas'
 import { NewLayoutDialog } from './components/NewLayoutDialog'
 import { Toolbar } from './components/Toolbar'
 import { CellType } from './types'
-import type { GridPosition, Tool } from './types'
+import type { CategoryMarker, GridPosition, Tool } from './types'
 import { useStoreLayout } from './useStoreLayout'
 
 export default function LayoutEditorPage() {
-  const { layout, createLayout, paintCell, placeMarker, placeCategoryMarker, removeMarker, resetLayout } =
-    useStoreLayout()
+  const {
+    layout,
+    createLayout,
+    paintCell,
+    placeMarker,
+    placeCategoryMarker,
+    updateCategoryMarker,
+    removeMarker,
+    resetLayout,
+  } = useStoreLayout()
   const [activeTool, setActiveTool] = useState<Tool>({ kind: 'paint', cellType: CellType.Aisle })
   const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false)
+  const [editingMarker, setEditingMarker] = useState<CategoryMarker | null>(null)
 
   function handlePaintCell(position: GridPosition) {
     if (activeTool.kind !== 'paint') return
@@ -22,7 +32,7 @@ export default function LayoutEditorPage() {
     if (activeTool.kind === 'place-marker') {
       placeMarker(position, activeTool.markerKind)
     } else if (activeTool.kind === 'place-category') {
-      placeCategoryMarker(position, activeTool.label, activeTool.color)
+      placeCategoryMarker(position, activeTool.label, activeTool.color, activeTool.coldChain)
     }
   }
 
@@ -39,6 +49,10 @@ export default function LayoutEditorPage() {
     setConfirmDiscardOpen(false)
   }
 
+  function handleEditMarker(marker: CategoryMarker) {
+    setEditingMarker(marker)
+  }
+
   if (!layout) {
     return <NewLayoutDialog open onCreate={createLayout} />
   }
@@ -52,13 +66,25 @@ export default function LayoutEditorPage() {
           activeTool={activeTool}
           onPaintCell={handlePaintCell}
           onPlaceMarker={handlePlaceMarker}
-          onRemoveMarker={removeMarker}
+          onEditMarker={handleEditMarker}
         />
       </div>
       <DiscardLayoutDialog
         open={confirmDiscardOpen}
         onConfirm={handleConfirmDiscard}
         onCancel={() => setConfirmDiscardOpen(false)}
+      />
+      <CategoryMarkerDialog
+        marker={editingMarker}
+        onSave={(patch) => {
+          if (editingMarker) updateCategoryMarker(editingMarker.id, patch)
+          setEditingMarker(null)
+        }}
+        onRemove={() => {
+          if (editingMarker) removeMarker(editingMarker.id)
+          setEditingMarker(null)
+        }}
+        onCancel={() => setEditingMarker(null)}
       />
     </div>
   )

@@ -57,7 +57,7 @@ export function useStoreLayout() {
   }, [])
 
   const placeCategoryMarker = useCallback(
-    (position: GridPosition, label: string, color: string) => {
+    (position: GridPosition, label: string, color: string, coldChain: boolean) => {
       setLayout((prev) => {
         if (!prev) return prev
         const marker: CategoryMarker = {
@@ -66,8 +66,20 @@ export function useStoreLayout() {
           label,
           color,
           position,
+          coldChain,
         }
         return { ...prev, markers: [...prev.markers, marker], updatedAt: new Date().toISOString() }
+      })
+    },
+    [],
+  )
+
+  const updateCategoryMarker = useCallback(
+    (id: string, patch: { label: string; color: string; coldChain: boolean }) => {
+      setLayout((prev) => {
+        if (!prev) return prev
+        const markers = prev.markers.map((m) => (m.id === id && m.kind === 'category' ? { ...m, ...patch } : m))
+        return { ...prev, markers, updatedAt: new Date().toISOString() }
       })
     },
     [],
@@ -89,5 +101,14 @@ export function useStoreLayout() {
     setLayout(null)
   }, [])
 
-  return { layout, createLayout, paintCell, placeMarker, placeCategoryMarker, removeMarker, resetLayout }
+  return {
+    layout,
+    createLayout,
+    paintCell,
+    placeMarker,
+    placeCategoryMarker,
+    updateCategoryMarker,
+    removeMarker,
+    resetLayout,
+  }
 }

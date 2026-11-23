@@ -21,6 +21,7 @@ export interface CategoryMarker {
   label: string
   color: string
   position: GridPosition
+  coldChain: boolean
 }
 
 export interface EndpointMarker {
@@ -49,4 +50,5 @@ export function findMarkerAt(markers: Marker[], position: GridPosition): Marker 
 export type Tool =
   | { kind: 'paint'; cellType: CellType }
   | { kind: 'place-marker'; markerKind: 'start' | 'end' }
-  | { kind: 'place-category'; label: string; color: string }
+  | { kind: 'place-category'; label: string; color: string; coldChain: boolean }
+  | { kind: 'select' }

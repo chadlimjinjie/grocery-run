@@ -1,6 +1,8 @@
+import { MousePointer2Icon, SnowflakeIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Toggle } from '@/components/ui/toggle'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { CELL_TYPE_META, DEFAULT_CATEGORIES, DEFAULT_CATEGORY_COLOR, PAINT_TOOL_ORDER } from '../constants'
@@ -15,6 +17,7 @@ interface ToolbarProps {
 export function Toolbar({ activeTool, onToolChange, onNewLayout }: ToolbarProps) {
   const [categoryLabel, setCategoryLabel] = useState(DEFAULT_CATEGORIES[0])
   const [categoryColor, setCategoryColor] = useState(DEFAULT_CATEGORY_COLOR)
+  const [coldChain, setColdChain] = useState(false)
 
   const paintValue = activeTool.kind === 'paint' ? [activeTool.cellType] : []
 
@@ -24,7 +27,7 @@ export function Toolbar({ activeTool, onToolChange, onNewLayout }: ToolbarProps)
   }
 
   function handleAddCategory() {
-    onToolChange({ kind: 'place-category', label: categoryLabel, color: categoryColor })
+    onToolChange({ kind: 'place-category', label: categoryLabel, color: categoryColor, coldChain })
   }
 
   return (
@@ -44,6 +47,18 @@ export function Toolbar({ activeTool, onToolChange, onNewLayout }: ToolbarProps)
             </Tooltip>
           ))}
         </ToggleGroup>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <span className="text-xs font-medium text-muted-foreground">Select</span>
+        <Button
+          type="button"
+          variant={activeTool.kind === 'select' ? 'default' : 'outline'}
+          onClick={() => onToolChange({ kind: 'select' })}
+        >
+          <MousePointer2Icon />
+          Select
+        </Button>
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -96,6 +111,21 @@ export function Toolbar({ activeTool, onToolChange, onNewLayout }: ToolbarProps)
               ))}
             </SelectContent>
           </Select>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Toggle
+                  variant="outline"
+                  pressed={coldChain}
+                  onPressedChange={setColdChain}
+                  aria-label="Cold chain item"
+                />
+              }
+            >
+              <SnowflakeIcon />
+            </TooltipTrigger>
+            <TooltipContent>Cold chain (visited last)</TooltipContent>
+          </Tooltip>
           <Button type="button" variant="outline" onClick={handleAddCategory}>
             Add
           </Button>

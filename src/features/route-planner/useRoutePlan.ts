@@ -38,7 +38,49 @@ export function useRoutePlan(layout: StoreLayout | null, items: ShoppingListItem
       }),
     )
 
-    const { order, totalDistance, legDistances } = computeOptimalOrder(distFromStart, distToEnd, distMatrix)
+    const coldIdx: number[] = []
+    const nonColdIdx: number[] = []
+    resolved.forEach((stop, i) => (stop.marker.coldChain ? coldIdx.push(i) : nonColdIdx.push(i)))
+
+    let order: number[]
+    let legDistances: number[]
+    let totalDistance: number
+
+    if (coldIdx.length === 0) {
+      const result = computeOptimalOrder(distFromStart, distToEnd, distMatrix)
+      order = result.order
+      legDistances = result.legDistances
+      totalDistance = result.totalDistance
+    } else {
+      const phase1 = computeOptimalOrder(
+        nonColdIdx.map((i) => distFromStart[i]),
+        nonColdIdx.map(() => 0),
+        nonColdIdx.map((i) => nonColdIdx.map((j) => distMatrix[i][j])),
+      )
+      const order1 = phase1.order.map((localIdx) => nonColdIdx[localIdx])
+
+      const entrySearch = order1.length > 0 ? waypointSearches[order1[order1.length - 1]] : startSearch
+
+      const phase2 = computeOptimalOrder(
+        coldIdx.map((i) => entrySearch.dist[resolved[i].marker.position.row][resolved[i].marker.position.col]),
+        coldIdx.map((i) => distToEnd[i]),
+        coldIdx.map((i) => coldIdx.map((j) => distMatrix[i][j])),
+      )
+      const order2 = phase2.order.map((localIdx) => coldIdx[localIdx])
+
+      const phase1Unreachable = order1.length !== nonColdIdx.length
+      const phase2Unreachable = order2.length !== coldIdx.length || phase2.totalDistance === Infinity
+
+      if (phase1Unreachable || phase2Unreachable) {
+        order = []
+        legDistances = []
+        totalDistance = Infinity
+      } else {
+        order = [...order1, ...order2]
+        legDistances = [...phase1.legDistances.slice(0, -1), ...phase2.legDistances]
+        totalDistance = legDistances.reduce((sum, d) => sum + d, 0)
+      }
+    }
 
     if (order.length === 0 || totalDistance === Infinity) {
       return {

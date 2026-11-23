@@ -2,7 +2,7 @@ import type Konva from 'konva'
 import { useRef } from 'react'
 import { Stage } from 'react-konva'
 import { DEFAULT_CELL_SIZE } from '../constants'
-import { findMarkerAt, type GridPosition, type StoreLayout, type Tool } from '../types'
+import { findMarkerAt, type CategoryMarker, type GridPosition, type StoreLayout, type Tool } from '../types'
 import { GridLayer, MarkerLayer } from './GridLayer'
 
 interface LayoutCanvasProps {
@@ -10,7 +10,7 @@ interface LayoutCanvasProps {
   activeTool: Tool
   onPaintCell: (position: GridPosition) => void
   onPlaceMarker: (position: GridPosition) => void
-  onRemoveMarker: (id: string) => void
+  onEditMarker: (marker: CategoryMarker) => void
 }
 
 export function LayoutCanvas({
@@ -18,7 +18,7 @@ export function LayoutCanvas({
   activeTool,
   onPaintCell,
   onPlaceMarker,
-  onRemoveMarker,
+  onEditMarker,
 }: LayoutCanvasProps) {
   const isPaintingRef = useRef(false)
   const lastPaintedRef = useRef<string | null>(null)
@@ -42,11 +42,15 @@ export function LayoutCanvas({
       onPaintCell(position)
       return
     }
-    const existing = findMarkerAt(layout.markers, position)
-    if (existing) {
-      onRemoveMarker(existing.id)
+    if (activeTool.kind === 'select') {
+      const existing = findMarkerAt(layout.markers, position)
+      if (existing && existing.kind === 'category') {
+        onEditMarker(existing)
+      }
       return
     }
+    const existing = findMarkerAt(layout.markers, position)
+    if (existing) return
     onPlaceMarker(position)
   }
 
